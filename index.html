@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Pengetahuan Umum</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: url('https://moondoggiesmusic.com/wp-content/uploads/2020/01/Contoh-Kompetensi-Inti.png') no-repeat center center fixed;
+      background-size: cover;
+      color: rgb(231, 22, 22);
+      text-align: center;
+    }
+
+    #start-screen, #quiz-screen, #end-screen {
+      padding: 20px;
+      margin-top: 100px;
+    }
+
+    h1, h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px white;
+    }
+
+    input, button {
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #6c5ce7;
+      color: #fff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #timer {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      background: rgba(0,0,0,0.4);
+      padding: 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    #options-container button {
+      display: block;
+      width: 80%;
+      margin: 10px auto;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    #player-name {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="start-screen">
+  <h1>Quiz Pengetahuan Umum</h1>
+  <input type="text" id="name-input" placeholder="Masukkan Nama Anda">
+  <br>
+  <button id="start-btn">Mulai Quiz</button>
+</div>
+
+<div id="quiz-screen" class="hidden">
+  <div id="player-name"></div>
+  <div id="timer">10</div>
+  <div id="question-container"></div>
+  <div id="options-container"></div>
+</div>
+
+<div id="end-screen" class="hidden">
+  <h2>Quiz Selesai!</h2>
+  <div id="final-score"></div>
+  <button id="restart-btn">Ulangi Quiz</button>
+</div>
+
+<!-- Audio Elements -->
+<audio id="background-music" src="c:\Users\Hype GLK\Downloads\sound.htm.mp3" preload="auto" loop></audio>
+<audio id="click-sound" src="https://cdn.pixabay.com/audio/2022/03/09/audio_7c1a1f8f2c.mp3" preload="auto"></audio>
+
+<script>
+const questions = [
+  {
+    question: "Ibu kota Indonesia adalah?",
+    options: ["Bandung", "Surabaya", "Jakarta", "Medan"],
+    answer: "Jakarta"
+  },
+  {
+    question: "Planet terbesar di tata surya?",
+    options: ["Mars", "Jupiter", "Bumi", "Saturnus"],
+    answer: "Jupiter"
+  },
+  {
+    question: "Siapa presiden pertama Indonesia?",
+    options: ["Soekarno", "Soeharto", "Jokowi", "Habibie"],
+    answer: "Soekarno"
+  },
+  {
+    question: "Lambang negara Indonesia adalah?",
+    options: ["Singa", "Elang", "Garuda", "Macan"],
+    answer: "Garuda"
+  },
+  {
+    question: "Benua terbesar di dunia?",
+    options: ["Afrika", "Asia", "Amerika", "Eropa"],
+    answer: "Asia"
+  },
+  {
+    question: "Simbol kimia air adalah?",
+    options: ["O2", "H2O", "CO2", "NaCl"],
+    answer: "H2O"
+  },
+  {
+    question: "Gunung tertinggi di dunia?",
+    options: ["Everest", "Kilimanjaro", "Merapi", "Fuji"],
+    answer: "Everest"
+  },
+  {
+    question: "Seni melukis di dinding gua disebut?",
+    options: ["Grafiti", "Mural", "Mozaik", "Fresco"],
+    answer: "Mural"
+  },
+  {
+    question: "Jumlah warna dalam pelangi?",
+    options: ["5", "6", "7", "8"],
+    answer: "7"
+  },
+  {
+    question: "Hewan tercepat di darat?",
+    options: ["Kuda", "Singa", "Cheetah", "Gazelle"],
+    answer: "Cheetah"
+  }
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+let timer;
+let timeLeft = 10;
+let playerName = '';
+
+const nameInput = document.getElementById('name-input');
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+const playerNameElement = document.getElementById('player-name');
+const timerElement = document.getElementById('timer');
+const questionContainer = document.getElementById('question-container');
+const optionsContainer = document.getElementById('options-container');
+const finalScore = document.getElementById('final-score');
+const backgroundMusic = document.getElementById('background-music');
+const clickSound = document.getElementById('click-sound');
+
+startBtn.addEventListener('click', startQuiz);
+restartBtn.addEventListener('click', () => location.reload());
+
+function startQuiz() {
+    playerName = nameInput.value.trim();
+    if (!playerName) {
+        alert('Masukkan nama dulu!');
+        return;
+    }
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    playerNameElement.textContent = `Selamat Datang, ${playerName}!`;
+    backgroundMusic.play();
+    showQuestion();
+}
+
+function showQuestion() {
+    resetState();
+    const currentQuestion = questions[currentQuestionIndex];
+    questionContainer.textContent = currentQuestion.question;
+    currentQuestion.options.forEach(option => {
+        const button = document.createElement('button');
+        button.textContent = option;
+        button.addEventListener('click', () => selectAnswer(option));
+        optionsContainer.appendChild(button);
+    });
+    timeLeft = 10;
+    timerElement.textContent = timeLeft;
+    timer = setInterval(updateTimer, 1000);
+}
+
+function resetState() {
+    clearInterval(timer);
+    while (optionsContainer.firstChild) {
+        optionsContainer.removeChild(optionsContainer.firstChild);
+    }
+}
+
+function updateTimer() {
+    timeLeft--;
+    timerElement.textContent = timeLeft;
+    if (timeLeft === 0) {
+        nextQuestion();
+    }
+}
+
+function selectAnswer(selectedOption) {
+    clickSound.play();
+    const currentQuestion = questions[currentQuestionIndex];
+    if (selectedOption === currentQuestion.answer) {
+        score += 10;
+    }
+    nextQuestion();
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+        showQuestion();
+    } else {
+        endQuiz();
+    }
+}
+
+function endQuiz() {
+    clearInterval(timer);
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('end-screen').classList.remove('hidden');
+    finalScore.textContent = `${playerName}, Skor Anda: ${score} / 100`;
+}
+</script>
+
+</body>
+</html>
